@@ -443,24 +443,43 @@
             });
         });
 
-        function handleContactSubmit(event) {
-            const form = document.getElementById('contactForm');
-            const successState = document.getElementById('successState');
-            const submitBtn = document.getElementById('submitBtn');
+        async function handleFormSubmit(event) {
+    event.preventDefault(); // 1. Stops the browser from reloading or redirecting
+    const form = event.target;
+    const submitBtn = document.getElementById('submitBtn');
+    const successState = document.getElementById('successState');
 
-            if (form.getAttribute('action') === '#') {
-                event.preventDefault();
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = 'Sending...';
+    // 2. Give visual feedback to the user while sending
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = 'Sending...';
 
-                setTimeout(() => {
-                    form.style.display = 'none';
-                    successState.classList.remove('hidden');
-                    successState.classList.add('flex');
-                    lucide.createIcons();
-                }, 1000);
+    try {
+        // 3. Send data silently to Formspree in the background using fetch
+        const response = await fetch(form.action, {
+            method: form.method,
+            body: new FormData(form),
+            headers: {
+                'Accept': 'json'
             }
+        });
+
+        if (response.ok) {
+            // 4. If successful, hide the form and show your inline success box
+            form.style.display = 'none';
+            successState.classList.remove('hidden');
+            successState.classList.add('flex');
+            lucide.createIcons(); // Refreshes icons like the checkmark
+        } else {
+            alert('There was a problem submitting your form. Please try emailing directly.');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<span>Send Message</span> <i data-lucide="send" class="w-4 h-4"></i>';
         }
+    } catch (error) {
+        alert('Network error. Please check your connection.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>Send Message</span> <i data-lucide="send" class="w-4 h-4"></i>';
+    }
+}
 
         function resetContactForm() {
             const form = document.getElementById('contactForm');
